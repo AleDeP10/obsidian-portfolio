@@ -1,0 +1,198 @@
+{
+  "main": {
+    "id": "8c2a753ab2407b9d",
+    "type": "split",
+    "children": [
+      {
+        "id": "7b600563b9dfcc89",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6105469814fe03e1",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Diary/Milestones/MILESTONE_1.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "MILESTONE_1"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "86f30824a0ea682d",
+    "type": "split",
+    "children": [
+      {
+        "id": "24725356ea93bfd4",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "fe44151527eed86f",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Esplora risorse"
+            }
+          },
+          {
+            "id": "5572b7aab10026d5",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Ricerca"
+            }
+          },
+          {
+            "id": "e552eebc2266d7e9",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Segnalibri"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "70b53cd9cffd5b76",
+    "type": "split",
+    "children": [
+      {
+        "id": "9766849637a5a681",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9b117eae226deddb",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Diary/Groomings/GRM_Milestone_2.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Riferimenti a GRM_Milestone_2"
+            }
+          },
+          {
+            "id": "6b9ec938a0ab0198",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Diary/Groomings/GRM_Milestone_2.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Collegamenti in uscita da GRM_Milestone_2"
+            }
+          },
+          {
+            "id": "c9488ab69653d630",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Etichette"
+            }
+          },
+          {
+            "id": "36992d75d5224203",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Tutte le proprietà"
+            }
+          },
+          {
+            "id": "b8d5bfb17ff5538f",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Diary/Groomings/GRM_Milestone_2.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Struttura di GRM_Milestone_2"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Apri selezione rapida": false,
+      "graph:Apri vista grafo": false,
+      "canvas:Crea nuova lavagna": false,
+      "daily-notes:Apri nota del giorno": false,
+      "templates:Inserisci modello": false,
+      "command-palette:Apri riquadro comandi": false,
+      "bases:Crea nuova Base": false
+    }
+  },
+  "active": "6105469814fe03e1",
+  "lastOpenFiles": [
+    "Diary/Scores/SCR_Milestone_2.md",
+    "Diary/Groomings/GRM_Milestone_2.md",
+    "Diary/Milestones/MILESTONE_1.md",
+    "Diary/Decisions/DEC_Milestone_1.md",
+    "Diary/Scores",
+    "Diary/Scores",
+    "Diary/Decisions/DECISIONS.md",
+    "Diary/Groomings",
+    "Diary/Decisions/Decision Track Record.md"
+  ]
+}
