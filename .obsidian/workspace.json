@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Diary/Milestones/MILESTONE_1.md",
+                "file": "ObsidianSync Diary/Troubleshooting/TRB_Milestone_2.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "MILESTONE_1"
+              "title": "TRB_Milestone_2"
             }
           }
         ]
@@ -186,13 +186,16 @@
   "active": "6105469814fe03e1",
   "lastOpenFiles": [
     "Diary/Scores/SCR_Milestone_2.md",
-    "Diary/Groomings/GRM_Milestone_2.md",
     "Diary/Milestones/MILESTONE_1.md",
     "Diary/Decisions/DEC_Milestone_1.md",
+    "Diary/Groomings/GRM_Milestone_2.md",
     "Diary/Scores",
-    "Diary/Scores",
-    "Diary/Decisions/DECISIONS.md",
+    "Diary/Milestones",
+    "Diary/Decisions",
     "Diary/Groomings",
+    "Diary",
+    "README.md",
+    "Diary/Decisions/DECISIONS.md",
     "Diary/Decisions/Decision Track Record.md"
   ]
 }
