@@ -34,6 +34,7 @@
 ## Cheat-Sheet Acquisiti
 
 ### Git
+ - `git remote add origin <url>` + `git push -u origin main` — collega la repo locale al remoto e imposta il tracking branch; i push successivi saranno semplicemente `git push`
 - `git rm --cached -r <path>` — rimuove dal tracking senza cancellare i file locali
 - `git pull --allow-unrelated-histories` — unisce branch senza antenato comune
 - `git pull -X theirs` — risolve i conflitti preferendo il remoto

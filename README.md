@@ -30,8 +30,10 @@ obsidian-portfolio/
     │   └── GRM_Milestone_2.md
     ├── Milestones/         ← Sprint retrospectives: objectives, problems, cheat-sheets acquired
     │   └── MILESTONE_1.md
-    └── Scores/             ← Recruiter-style assessments and personal trainer evaluations
-        └── SCR_Milestone_2.md
+    ├── Scores/             ← Recruiter-style assessments and personal trainer evaluations
+    │   └── SCR_Milestone_2.md
+    └── Tutorials/          ← Technical cheat-sheets and know-how acquired sprint by sprint
+        └── gitflow.md
 ```
 
 ---
@@ -74,4 +76,4 @@ identified, priorities set, unknowns acknowledged.
 ## About
 
 Alessandro De Prato · FullStack Developer  
-[GitHub](https://github.com/AleDeP10) · [LinkedIn](#)
+[GitHub](https://github.com/AleDeP10) · [LinkedIn](#https://www.linkedin.com/in/alessandro-de-prato)

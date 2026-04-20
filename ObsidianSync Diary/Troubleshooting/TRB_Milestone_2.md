@@ -127,3 +127,34 @@ git add .
 git commit -m "chore: initial commit"
 git branch   # ora mostra 'main'
 ```
+
+---
+## [TRB-007] `Process` non è `AutoCloseable` — incompatibilità Java 21/25 vs 26
+
+**Contesto**: utilizzo di `Process` in un try-with-resources in `GitService.runCommand()`.
+IntelliJ segnala: `Required type: AutoCloseable — Provided: Process`.
+
+**Causa radice**: `Process` implementa `AutoCloseable` solo a partire da Java 26.
+Su Java 21 e 25 non è utilizzabile nel try-with-resources.
+
+**Soluzione**: rimuovere il try-with-resources esterno su `Process`, mantenendo solo
+quello sul `BufferedReader`. `Process` viene rilasciato correttamente da `waitFor()`.
+
+```java
+Process process = pb.start();
+try (BufferedReader reader = new BufferedReader(
+        new InputStreamReader(process.getInputStream()))) {
+    String line;
+    while ((line = reader.readLine()) != null) {
+        logService.info("[git] " + line);
+    }
+}
+return process.waitFor();
+```
+
+**Allineamento versione**: target del progetto impostato a Java 21 LTS nel `pom.xml`.
+JDK superiori installati localmente sono compatibili — Maven compila al livello
+dichiarato tramite `maven.compiler.source` e `maven.compiler.target`.
+
+**Criterio di scelta**: Java 21 è la LTS più diffusa in produzione (supporto fino al 2031)
+e quella più probabilmente disponibile nell'ambiente del valutatore.
