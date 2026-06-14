@@ -18,14 +18,14 @@ To ensure maximum creative control and efficiency, we use a hybrid multi-AI pipe
 
 ## 🗺️ Conceptual Directions & Versioning
 
-We have developed 5 distinct conceptual directions. While the first four concepts balance 4 specific variations, the final concept has been extended to 5 iterations to capture Martina's definitive cathartic vision, for a total of 21 unique iterations.
+We have developed 5 distinct conceptual directions. While the first four concepts balance 4 specific variations, the final concept has been extended to 6 iterations to capture Martina's definitive cathartic vision and its subsequent sunset synthesis, for a total of 22 unique iterations.
 
 ### Folder Structure & Naming Convention
 *   `/Prompts/PRM_Pürhā_X.Y.md` — The technical code submitted to the generator.
 *   `/Descriptions/DSC_Pürhā_X.Y.md` — A high-level emotional summary for creative review.
 *   `/Previews/PRV_Pürhā_X.Y.png` — The visual prototype generated during testing.
 
-*(Where **X** is the Core Concept [1 to 5] and **Y** is the Styling Variation [1 to 5])*
+*(Where **X** is the Core Concept [1 to 5] and **Y** is the Styling Variation [1 to 6])*
 
 ---
 
@@ -40,8 +40,8 @@ We have developed 5 distinct conceptual directions. While the first four concept
 *   **Concept 4: The Mechanical Coral Reef / Material Deconstruction**
     *   *Status:* 🟢 Completed & Archived (v4.1 - v4.4)
 *   **Concept 5: The Lonely Soldier (Martina's Vision)**
-    *   *Status:* 🟢 Production Ready (v5.1 - v5.5) 
-    *   *Note:* Explores the human figure, the isolation on a tropical beach, and the violin as a universal symbol. Culminates in the cathartic **v5.5 (The Bay of Rebirth)** featuring the International Flag of Planet Earth.
+    *   *Status:* 🟢 Production Ready (v5.1 - v5.6) 
+    *   *Note:* Explores the human figure, the isolation on a tropical beach, and the violin as a universal symbol. Culminates in the cathartic **v5.5 (The Bay of Rebirth)** and its sunset camp evolution, **v5.6 (The Camp at Twilight)**, introducing the International Flag of Planet Earth as a shared, communal thread.
 
 ---
 

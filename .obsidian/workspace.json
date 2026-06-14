@@ -11,12 +11,14 @@
             "id": "00556107356d14ca",
             "type": "leaf",
             "state": {
-              "type": "image",
+              "type": "markdown",
               "state": {
-                "file": "Pürhā/Previews/PRV_Pürhā_5.6.png"
+                "file": "Pürhā/README.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-image",
-              "title": "PRV_Pürhā_5.6"
+              "icon": "lucide-file",
+              "title": "README"
             }
           }
         ]
@@ -183,8 +185,8 @@
   },
   "active": "00556107356d14ca",
   "lastOpenFiles": [
-    "Pürhā/Descriptions/DSC_Pürhā_5.6.md",
     "Pürhā/Previews/PRV_Pürhā_5.6.png",
+    "Pürhā/Descriptions/DSC_Pürhā_5.6.md",
     "Pürhā/Prompts/PRM_Pürhā_5.6.md",
     "Pürhā/Prompts/PRM_Pürhā_5.5.md",
     "Pürhā/Descriptions/DSC_Pürhā_5.5.md",
