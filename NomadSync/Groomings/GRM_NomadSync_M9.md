@@ -1,14 +1,12 @@
-# GRM — Milestone 9: MainWindow (JavaFX), PrismUI, i18n
+# GRM — Milestone 8: Backend Refactoring + TrayManager
 
 ---
 
 ## Contesto
 
-La milestone 5 ha rilasciato ObsidianSync 1.0.0 con tray funzionante e backend completo. La milestone 6 introduce `MainWindow` tramite **JavaFX**, il design system condiviso (`PrismUI`) e l'internazionalizzazione su 10 lingue.
+Il backend di ObsidianSync è completo e testato (61 test, 0 failure). Questa milestone introduce il refactoring necessario per supportare la nuova conflict strategy verificata sul campo, e implementa l'intera interfaccia tray che rende il tool utilizzabile da un utente non tecnico.
 
-La coesistenza AWT (tray) + JavaFX (MainWindow) è supportata: `Platform.setImplicitExit(false)` — la JVM non esce quando la finestra viene chiusa. Tutti gli aggiornamenti JavaFX da thread AWT usano `Platform.runLater()`.
-
-**Prerequisito operativo**: completare il tutorial JavaFX (scene graph, FXML, CSS, `Platform.runLater()`, coesistenza AWT) prima di toccare qualsiasi componente UI — come concordato nelle metriche di apprendimento.
+Componenti UI di M5: `TrayIcon`, `ContextMenu`, `VaultSwitcherPanel`, `ToastNotification`. `MainWindow` (JavaFX) è rimandato a M6.
 
 ---
 
@@ -16,154 +14,199 @@ La coesistenza AWT (tray) + JavaFX (MainWindow) è supportata: `Platform.setImpl
 
 |#|Obiettivo|Criterio di accettazione|
 |---|---|---|
-|1|Tutorial JavaFX completato|scene graph, FXML, CSS, threading, coesistenza AWT compresi|
-|2|`MainWindow` — struttura|finestra apre da ContextMenu, vault switcher funzionante|
-|3|Tab Home|dashboard con card per vault, alert bar conflitti|
-|4|Tab Properties|form editing vault, validazione, salvataggio|
-|5|Tab Log|visualizzatore eventi, filtro livello e date, auto-scroll|
-|6|Tab Conflicts|lista snapshot, apertura cartella, dialog conferma risoluzione|
-|7|Tab Backup|lista snapshot FIFO, ripristino, eliminazione|
-|8|Tab Settings|configurazione globale: porta, lingua, tema|
-|9|`PrismUI` — progetto Maven separato|tema Default funzionante, dipendenza inclusa|
-|10|Temi UI|Default + Retro terminal + Zen minimal via CSS swap|
-|11|i18n — 10 lingue|`ResourceBundle` configurato, stringhe esternalizzate|
-|12|Installer Windows|`.exe` via `jpackage`, shortcut desktop, avvio automatico|
-|13|Pubblicazione `PrismUI` su Maven Central|artefatto pubblicato, README con screenshot|
-|14|Release 2.0.0|`git flow release finish 2.0.0`, tag pushato|
+|1|`SYNCHRONIZE` sostituisce `PULL_MANUAL` e `PUSH_MANUAL`|`EventType` aggiornato, suite verde|
+|2|`GitService.synchronize()` — conflict strategy completa|algoritmo FIFO backup + `-X ours` + remote-conflicts implementato e testato|
+|3|`SyncOrchestrator` aggiornato|switch gestisce `SYNCHRONIZE`, casi obsoleti rimossi|
+|4|`VaultService` — unicità vault.name|`VaultException` su duplicato, validazione all'avvio|
+|5|`TrayIcon`|quattro stati visivi, click sx → `SYNCHRONIZE`, click dx → ContextMenu, tooltip|
+|6|`ContextMenu`|struttura a tre sezioni, tutte le azioni funzionanti|
+|7|`VaultSwitcherPanel`|sottomenu con lista vault, spunta corrente, checkbox Save on selection|
+|8|`ToastNotification`|tre scenari: success, conflitto azionabile, fallimento rete|
+|9|`Main` modalità tray|carica vaults.json, avvia SocketServer e TrayManager|
+|10|Task Scheduler Windows|3 task configurati e testati manualmente|
+|11|Test e2e manuale|ciclo completo logon/logoff su vault reale, conflitto intenzionale|
+|12|Release 1.0.0|`git flow release finish 1.0.0`, tag pushato|
 
 ---
 
 ## Ordine implementativo
 
-### Layer 0 — Prerequisiti (bloccante)
+### Layer 1 — Refactoring backend
 
-**Step 0 — Tutorial JavaFX** Argomenti obbligatori prima di scrivere una riga di UI:
+**Step 1 — `EventType`** Rimuovere `PULL_MANUAL` e `PUSH_MANUAL`. Aggiungere `SYNCHRONIZE` con priorità 2. Da eseguire per primo — impatta tutta la suite. Verde su `mvn test` prima di proseguire.
 
-- Scene graph: `Stage` → `Scene` → `Parent` → nodi
-- FXML + `FXMLLoader` — separazione layout/logica
-- CSS JavaFX — selettori, variabili, tema switching
-- `Platform.runLater()` — aggiornamenti UI da thread non-JavaFX
-- Coesistenza AWT/JavaFX: `Platform.setImplicitExit(false)`
+Scala di priorità aggiornata:
 
-Dipendenze Maven:
+| Priorità | Evento        |
+| -------- | ------------- |
+| 1        | `PULL_LOGON`  |
+| 2        | `SYNCHRONIZE` |
+| 3        | `PUSH_LOGOFF` |
+| 4        | `AUTOSAVE`    |
 
-```xml
-<dependency>
-    <groupId>org.openjfx</groupId>
-    <artifactId>javafx-controls</artifactId>
-    <version>21</version>
-</dependency>
-<dependency>
-    <groupId>org.openjfx</groupId>
-    <artifactId>javafx-fxml</artifactId>
-    <version>21</version>
-</dependency>
+**Step 2 — `GitService.synchronize()`**
+
 ```
+SYNCHRONIZE
+│
+├─ SE presenti modifiche locali (git status --porcelain != vuoto)
+│   └─ git add -A
+│   └─ git commit -m "sync: local changes before pull"
+│
+├─ git pull
+│   ├─ SUCCESS (exit code 0) → git push → fine
+│   └─ CONFLICT (exit code != 0)
+│       ├─ git merge --abort   (ignorare exit code != 0)
+│       ├─ FIFO backup → backups/<vault-name>_{timestamp}/  (max 3 snapshot)
+│       ├─ git pull -X ours --no-edit
+│       ├─ per ogni riga "Auto-merging" nello stdout
+│       │   └─ git --no-pager show FETCH_HEAD:<filepath>
+│       │       → remote-conflicts/<vault-name>_{timestamp}/<filename>
+│       ├─ git push
+│       └─ restituisce lista file conflittati al chiamante
+```
+
+Evidenze dal campo:
+
+- `git merge --abort` restituisce errore se non c'è merge in corso — ignorare corretto
+- `-X ours` richiede modifiche locali committate prima
+- `MERGE_HEAD` non esiste dopo il merge — usare `FETCH_HEAD`
+- `--no-pager` obbligatorio su `git show` per evitare apertura `less`
+- `--no-edit` obbligatorio su `git pull -X ours` per evitare apertura editor
+
+**Step 3 — `SyncOrchestrator`** Switch aggiornato: `SYNCHRONIZE` chiama `gitService.synchronize()`, che restituisce la lista file conflittati. Se non vuota, passata al `NotificationHook` per il toast azionabile. Rimozione case `PULL_MANUAL`/`PUSH_MANUAL`.
+
+**Step 4 — `VaultService`** `create()` e `update()` lanciano `VaultException("duplicated vault name: " + name)` se il nome è già presente. Validazione all'avvio di tutti i nomi in `vaults.json`.
 
 ---
 
-### Layer 1 — PrismUI design system
+### Layer 2 — TrayManager
 
-**Step 1 — Progetto Maven `prism-ui`**
+**Step 5 — `TrayIcon`**
+
+Implementazione: `SystemTray.getSystemTray()` + `TrayIcon` AWT.
+
+|Stato|Icona|Quando|
+|---|---|---|
+|Idle|verde statica|nessuna operazione in corso|
+|Syncing|animata / rotante|pull o push in esecuzione|
+|Error|rossa|ultimo sync fallito dopo 3 retry|
+|Conflict|arancione|file in `remote-conflicts/` in attesa|
+
+Interazioni:
+
+- **Click sinistro** → `SYNCHRONIZE` sul vault corrente via `SocketServer.publish()`
+- **Click destro** → apre `ContextMenu`
+- **Tooltip** → "Last sync: X minutes ago"
+
+**Step 6 — `ContextMenu`**
+
+`PopupMenu` AWT. Principio guida: zero decisioni cognitive.
 
 ```
-prism-ui/
-  src/main/java/io/aledep10/prismui/
-    components/     ← PButton, PLabel, PTextField, PComboBox, PTabPane
-    theme/          ← ThemeManager
-  src/main/resources/io/aledep10/prismui/themes/
-    default.css
-    retro-terminal.css
-    zen-minimal.css
+┌─────────────────────────────┐
+│  ● Personal             ▶   │  → VaultSwitcherPanel sottomenu
+├─────────────────────────────┤
+│  Sync current vault         │  → SYNCHRONIZE su vault corrente
+│  Sync all vaults            │  → SYNCHRONIZE broadcast
+│  Pull current vault         │  → PULL_LOGON su vault corrente
+├─────────────────────────────┤
+│  Last sync: 3 min ago       │  (label non cliccabile)
+│  View log                   │  → tab Log in MainWindow (M6)
+├─────────────────────────────┤
+│  Open Dashboard             │  → MainWindow (M6, placeholder)
+│  Open vault folder          │  → Desktop.getDesktop().open(vault.path)
+├─────────────────────────────┤
+│  Exit                       │
+└─────────────────────────────┘
 ```
 
-Tema switching:
+**Step 7 — `VaultSwitcherPanel`**
+
+`Menu` AWT annidato come sottomenu della prima voce del ContextMenu. È il componente con più responsabilità nel menu rapido: aggiorna `current-vault.json`, aggiorna il tooltip della `TrayIcon`, e opzionalmente pubblica `SYNCHRONIZE`.
+
+```
+┌─────────────────┐
+│ ✓ Personal      │  ← vault corrente con spunta
+│   Work          │
+│   Research      │
+│ ─────────────── │
+│ ☐ Save on sel.  │  ← sempre visibile, fuori dallo scroll
+└─────────────────┘
+```
+
+Save on selection: se attivo, dopo aggiornamento `current-vault.json` pubblica automaticamente `SYNCHRONIZE` sul vault appena selezionato.
+
+**Step 8 — `ToastNotification`**
+
+**Success** — toast AWT nativo, auto-dismiss:
 
 ```java
-scene.getStylesheets().clear();
-scene.getStylesheets().add(getClass().getResource("themes/" + theme.cssFile()).toExternalForm());
+trayIcon.displayMessage("ObsidianSync", "✓ Personal sincronizzato", MessageType.INFO)
 ```
 
-Naming session per il nome definitivo prima del release — candidato principale **PrismUI**.
+**Conflitto risolto** — `JDialog` persistente:
+
+```
+⚠ Sync completato con conflitti
+
+File aggiornati dal remoto:
+  • Gabriela_experiment.md
+  • note-lavoro.md
+
+La tua versione locale è stata mantenuta.
+
+[ Apri versioni remote ]
+
+Hai perso delle modifiche? → Apri backup locale
+```
+
+- "Apri versioni remote" → `Desktop.getDesktop().open(remote-conflicts/<vault>_{timestamp}/)`
+- "Apri backup locale" → `Desktop.getDesktop().open(backups/<vault>_{timestamp}/)`
+- Apre lo snapshot più recente, non la root
+
+**Fallimento rete** — `JDialog` persistente, solo eventi priorità 1:
+
+```
+✗ Pull non riuscito
+
+Nessuna connessione disponibile dopo 3 tentativi.
+Il vault potrebbe non essere aggiornato.
+
+[ OK ]
+```
 
 ---
 
-### Layer 2 — MainWindow
+### Layer 3 — Integrazione e release
 
-**Step 2 — Struttura finestra**
-
-`Stage` con `BorderPane`. Vault switcher (`ComboBox` autocomplete) in toolbar superiore, sempre visibile. Sei tab:
+**Step 9 — `Main` modalità tray**
 
 ```
-[ 🏠 Home ]  [ Properties ]  [ Log ]  [ Conflicts ]  [ Backup ]  [ ⚙ Settings ]
+Main.main()
+  → carica config.properties
+  → carica vaults.json via VaultService
+  → costruisce SocketServer
+  → registra tutti i vault
+  → costruisce TrayManager(socketServer, vaultService)
+  → trayManager.start()
+  → socketServer.start()
+  → blocca su Object.wait()
 ```
 
-Apertura contestuale da ContextMenu AWT (thread-safe):
+**Step 10 — Task Scheduler Windows**
 
-```java
-Platform.runLater(() -> mainWindow.openTab(Tab.LOG, vaultId));
-Platform.runLater(() -> mainWindow.openTab(Tab.CONFLICTS, vaultId));
-```
+- `Pull@Logon` → `java -jar ObsidianSync.jar pull`
+- `Push@Logoff` → `java -jar ObsidianSync.jar push`
+- `Autosave@15min` → `java -jar ObsidianSync.jar autosave`
 
-Default (da TrayIcon / eseguibile): tab Home.
+**Step 11 — Test e2e manuale** Ciclo completo: modifica su PC A → logoff → logon su PC B → modifiche presenti. Verifica conflitto intenzionale e toast azionabile con lista file.
 
-**Step 3 — Tab Home** Card per vault: nome, stato icona, ultimo sync, pulsante Sync. Alert bar arancione se conflitti pending — link diretto a tab Conflicts.
-
-**Step 4 — Tab Properties** Form FXML per configurazione per-vault: nome, path, remote URL, branch, credenziali. Validazione inline con `TextFormatter`. Salvataggio via `VaultService.update()`.
-
-**Step 5 — Tab Log** `TextArea` non editabile. `ChoiceBox` filtro livello, `DatePicker` filtro date, toggle auto-scroll, pulsante Clear. Aggiornamento asincrono via `Platform.runLater()`.
-
-**Step 6 — Tab Conflicts** `ListView` di snapshot in `remote-conflicts/<vault>/`. Per ogni snapshot: timestamp, lista file, pulsante "Apri cartella" → `Desktop.getDesktop().open()`.
-
-Dialog di conferma risoluzione:
+**Step 12 — Release 1.0.0**
 
 ```
-Hai copiato le modifiche remote che volevi preservare?
-
-Una volta confermato, la versione remota di
-note-lavoro.md verrà eliminata.
-
-[ Annulla ]    [ Sì, ho finito ]
-```
-
-**Step 7 — Tab Backup** `ListView` di snapshot FIFO in `backups/<vault>/`. Per ogni snapshot: timestamp, dimensione, pulsante "Apri cartella", pulsante "Ripristina", pulsante "Elimina".
-
-**Step 8 — Tab Settings** Porta socket, intervallo autosave, percorso backup, soglia FIFO, tema UI (cambio live), lingua.
-
----
-
-### Layer 3 — i18n
-
-**Step 9 — Esternalizzazione stringhe** `ResourceBundle.getBundle("messages", locale)`. Cambio lingua → reload + aggiornamento binding.
-
-|Lingua|Codice|
-|---|---|
-|English|`en`|
-|Mandarin|`zh`|
-|Hindi|`hi`|
-|Spanish|`es`|
-|Arabic|`ar`|
-|Portuguese|`pt`|
-|French|`fr`|
-|German|`de`|
-|Japanese|`ja`|
-|Italian|`it`|
-
-RTL: `root.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT)` — propaga ai figli automaticamente.
-
----
-
-### Layer 4 — Installer e release
-
-**Step 10 — Installer Windows** `jpackage` → `.exe` con JRE bundled, shortcut desktop, avvio automatico, uninstaller.
-
-**Step 11 — Pubblicazione PrismUI su Maven Central** Signing GPG + deploy su OSSRH. README con screenshot dei tre temi. Avviare registrazione OSSRH almeno 2 settimane prima del release.
-
-**Step 12 — Release 2.0.0**
-
-```
-git flow release start 2.0.0
-git flow release finish 2.0.0
+git flow release start 1.0.0
+git flow release finish 1.0.0
 git push origin main develop --tags
 ```
 
@@ -171,18 +214,10 @@ git push origin main develop --tags
 
 ## Rischi
 
-|Rischio|Probabilità|Impatto|Mitigazione|
-|---|---|---|---|
-|Coesistenza AWT + JavaFX — threading issues|Media|Alto|`Platform.setImplicitExit(false)`, update via `Platform.runLater()`|
-|JavaFX rendering inconsistente Windows 10 vs 11|Bassa|Medio|test su entrambe le versioni|
-|`jpackage` — installer ~60MB con JRE bundled|Alta|Basso|accettato — standard JavaFX desktop|
-|Traduzione Mandarin/Arabo — revisione madrelingua|Alta|Medio|DeepL per bozza, flag "community review needed"|
-|Maven Central — approvazione 1-2 settimane|Alta|Basso|avviare registrazione OSSRH in anticipo|
-|RTL layout rompe componenti non preparati|Media|Medio|testare con locale `ar` in sviluppo|
-
----
-
-## Scope rimandato a M7
-
-- React Native mobile (iOS / Android / Huawei AppGallery)
-- Temi aggiuntivi — v1.1
+| Rischio                                                  | Probabilità | Impatto | Mitigazione                                          |
+| -------------------------------------------------------- | ----------- | ------- | ---------------------------------------------------- |
+| Messaggi stderr Git localizzati — whitelist non funziona | Media       | Alto    | testare sulla macchina reale prima del release       |
+| Trigger logoff scatta prima del push completato          | Media       | Alto    | timeout task 2 min; verificare cronologia esecuzioni |
+| `TrayIcon` AWT non supportata su JDK headless            | Bassa       | Alto    | verificare con `SystemTray.isSupported()` all'avvio  |
+| Percorso JAR con spazi rompe l'invocazione .bat          | Media       | Medio   | racchiudere tutti i path tra virgolette              |
+| Token GitHub scaduto rompe push al logoff                | Bassa       | Alto    | token fine-grained senza scadenza                    |
